@@ -1,4 +1,3 @@
-
 # mvLMM is a python-based linear mixed-model solver for multiple phenotypes.
 
 # Copyright (C) 2014  Nicholas A. Furlotte (nick.furlotte@gmail.com)
@@ -27,7 +26,7 @@ TRACE = True
 # This is needed to limit the number of threads MKL is using
 # You should really set this outside of this but I'm being extra paranoid as to not get banned from the cluster again
 import os
-if not os.environ.has_key("MKL_NUM_THREADS"): os.environ["MKL_NUM_THREADS"] = "1"
+#if not os.environ.has_key("MKL_NUM_THREADS"): os.environ["MKL_NUM_THREADS"] = "1"
 
 import sys
 import time
@@ -37,7 +36,6 @@ import scipy.optimize as optimize
 from scipy import stats
 from pylmm.lmm import LMM
 import pdb
-
 
 class mvLMM:
    """
@@ -59,8 +57,8 @@ class mvLMM:
       self.Kva = Kva
       self.Kve = Kve
       if sum(self.Kva <= 0): 
-	 sys.stderr.write("Cleaning %d eigen values\n" % (sum(self.Kva < 0)))
-	 self.Kva[self.Kva <= 0] = 1e-6
+         sys.stderr.write("Cleaning %d eigen values\n" % (sum(self.Kva < 0)))
+         self.Kva[self.Kva <= 0] = 1e-6
 
       
       self.Y = self.cleanPhenos(Y)
@@ -72,9 +70,9 @@ class mvLMM:
 
       self.LMMs = []
       for i in range(self.M): 
-	 self.LMMs.append(LMM(Y[:,i],self.K,self.Kva,self.Kve,X0=self.X0))
-	 # Fitting under the NULL where the SNP has no effect
-	 self.LMMs[i].fit()
+         self.LMMs.append(LMM(Y[:,i],self.K,self.Kva,self.Kve,X0=self.X0))
+         # Fitting under the NULL where the SNP has no effect
+         self.LMMs[i].fit()
       
       self._cacheLLStuff()
 
@@ -85,7 +83,7 @@ class mvLMM:
       self.ecors = None
       self.ngrids = 100
       self._setDefaultGcorsandEcors(self.ngrids)
-
+    
    def _setDefaultGcorsandEcors(self,ngrids=100):
       self.ngrids = 100
       gcors = np.array(range(ngrids))/float(ngrids)
@@ -124,14 +122,13 @@ class mvLMM:
    def cleanPhenos(self,Y):
       M = Y.shape[1] 
       for i in range(M):
-	 y = Y[:,i]
-	 x = True - np.isnan(y)
-	 if sum(x) == len(y): continue
-	 m = y[x].mean()
-	 y[np.isnan(y)] = m
-	 Y[:,i] = y
-      return Y
-
+         y = Y[:,i]
+         x = True - np.isnan(y)
+         if sum(x) == len(y): continue
+         m = y[x].mean()
+         y[np.isnan(y)] = m
+         Y[:,i] = y
+         return Y
    def _cacheLLStuff(self):
       self.leftTransform = self.Kve.T
       self.X0_T = np.dot(self.leftTransform,self.X0)
@@ -169,12 +166,12 @@ class mvLMM:
       Phi = np.ones((self.M,self.M))
 
       for i in range(self.M):
-	 Psi[i,i] = self.LMMs[i].optH*self.LMMs[i].optSigma
-	 Phi[i,i] = (1.0 - self.LMMs[i].optH)*self.LMMs[i].optSigma
-      for i in range(self.M - 1):
-	 for j in range(i+1,self.M):
-	    Psi[i,j] = Psi[j,i] = np.sqrt(Psi[i,i])*np.sqrt(Psi[j,j]) * gcor[i,j]
-	    Phi[i,j] = Phi[j,i] = np.sqrt(Phi[i,i])*np.sqrt(Phi[j,j]) * ecor[i,j]
+         Psi[i,i] = self.LMMs[i].optH*self.LMMs[i].optSigma
+         Phi[i,i] = (1.0 - self.LMMs[i].optH)*self.LMMs[i].optSigma
+         for i in range(self.M - 1):
+             for j in range(i+1,self.M):
+                Psi[i,j] = Psi[j,i] = np.sqrt(Psi[i,i])*np.sqrt(Psi[j,j]) * gcor[i,j]
+                Phi[i,j] = Phi[j,i] = np.sqrt(Phi[i,i])*np.sqrt(Phi[j,j]) * ecor[i,j]
 
       return Psi,Phi
 
@@ -201,9 +198,9 @@ class mvLMM:
       Phi_Kva[Phi_Kva == 0] = 1e-6
 
       if sum(Psi_Kva < 0) or sum(Phi_Kva < 0):
-	 #sys.stderr.write("Negative Eigen Values: \n %s \n %s\n" % (str(gcor),str(ecor)))
-	 #sys.stderr.write("Negative Eigen Values at %0.3f/%0.3f\n" % (gcor,ecor))
-	 return [np.nan]
+         #sys.stderr.write("Negative Eigen Values: \n %s \n %s\n" % (str(gcor),str(ecor)))
+         #sys.stderr.write("Negative Eigen Values at %0.3f/%0.3f\n" % (gcor,ecor))
+         return [np.nan]
 
 
       # Get the D matrix by diagonalizing Psi and Phi 
@@ -225,8 +222,8 @@ class mvLMM:
       # Now get the LL
       C = 0.0
       for i in range(self.M):
-	 #for j in range(self.N): C += np.log(self.Kva[j] + D[i])
-	 C += np.log(self.Kva + D[i]).sum()
+         #for j in range(self.N): C += np.log(self.Kva[j] + D[i])
+         C += np.log(self.Kva + D[i]).sum()
       Yc = Yt.T.copy()
       for i in range(self.M): Yc[0,i*self.N:i*self.N+self.N] = Yc[0,i*self.N:i*self.N+self.N] * (1.0 / (self.Kva + D[i]))
       Q = np.dot(Yc,Yt)
@@ -252,22 +249,22 @@ class mvLMM:
       LL = LL + logM
 
       if REML: 
-	 #sys.stderr.write("Calculating REML\n")
-	 LL_REML_part =  len(beta_T) * np.log(2.0*np.pi*sigma) + _REML_part
-	 LL = LL + 0.5 * LL_REML_part
+         #sys.stderr.write("Calculating REML\n")
+         LL_REML_part =  len(beta_T) * np.log(2.0*np.pi*sigma) + _REML_part
+         LL = LL + 0.5 * LL_REML_part
 
       # The hard way is the absolute naive way which takes a very long time
       # This is just an option for sanity/error checking
       if computeHard:
-	 sys.stderr.write("Computing hard version\n")
-	 Sigma = np.kron(Psi,self.K) + np.kron(Phi,np.diag(np.ones(self.N)))
-	 Sigma_inv = linalg.inv(Sigma)
-	 y = self.Y.T.reshape(-1,1)
-	 LL_hard_C = np.log(linalg.det(Sigma))
-	 LL_hard_Q = np.dot(np.dot(y.T,Sigma_inv),y)
-	 LL_hard = float(self.N)*2.0*np.log(2.0*np.pi) + LL_hard_C + LL_hard_Q
-	 LL_hard = -0.5 * LL_hard
-	 return LL_hard,beta_T,sigma,beta_T_stderr
+         sys.stderr.write("Computing hard version\n")
+         Sigma = np.kron(Psi,self.K) + np.kron(Phi,np.diag(np.ones(self.N)))
+         Sigma_inv = linalg.inv(Sigma)
+         y = self.Y.T.reshape(-1,1)
+         LL_hard_C = np.log(linalg.det(Sigma))
+         LL_hard_Q = np.dot(np.dot(y.T,Sigma_inv),y)
+         LL_hard = float(self.N)*2.0*np.log(2.0*np.pi) + LL_hard_C + LL_hard_Q
+         LL_hard = -0.5 * LL_hard
+         return LL_hard,beta_T,sigma,beta_T_stderr
 
       # beta_T_stderr is actually the variance of the estimator
       # It is just hard to change it around all the code right now...
@@ -294,8 +291,8 @@ class mvLMM:
       Phi_Kva[Phi_Kva == 0] = 1e-6
 
       if sum(Psi_Kva < 0) or sum(Phi_Kva < 0):
-	 sys.stderr.write("Negative Eigen Values at %0.3f/%0.3f\n" % (gcor,ecor))
-	 return [np.nan]
+         sys.stderr.write("Negative Eigen Values at %0.3f/%0.3f\n" % (gcor,ecor))
+         return [np.nan]
 
       # Get the P matrix
       R = Psi_Kve*np.sqrt(1.0/Psi_Kva)
@@ -303,7 +300,7 @@ class mvLMM:
       RR_Kva,RR_Kve = linalg.eigh(RR)
       P = []
       for i in range(len(RR_Kva)):
-	 for j in range(len(self.Kva_Kva)): P.append(RR_Kva[i] * self.Kva_Kva[j])
+         for j in range(len(self.Kva_Kva)): P.append(RR_Kva[i] * self.Kva_Kva[j])
       P = np.array(P)
 
       # get transformed Y : Yt = Mvec(Y) =   Q^\prime L vec(Y)
@@ -341,20 +338,19 @@ class mvLMM:
       # The hard way is the absolute naive way which takes a very long time
       # This is just an option for sanity/error checking
       if computeHard:
-	 sys.stderr.write("Computing hard version\n")
-	 Sigma = np.kron(Psi,self.K) + np.kron(Phi,np.diag(np.ones(self.N)))
-	 Sigma_inv = linalg.inv(Sigma)
-	 y = self.Y.T.reshape(-1,1)
-	 LL_hard_C = np.log(linalg.det(Sigma))
-	 LL_hard_Q = np.dot(np.dot(y.T,Sigma_inv),y)
-	 LL_hard = float(self.N)*2.0*np.log(2.0*np.pi) + LL_hard_C + LL_hard_Q
-	 LL_hard = -0.5 * LL_hard
-	 return LL_hard
+         sys.stderr.write("Computing hard version\n")
+         Sigma = np.kron(Psi,self.K) + np.kron(Phi,np.diag(np.ones(self.N)))
+         Sigma_inv = linalg.inv(Sigma)
+         y = self.Y.T.reshape(-1,1)
+         LL_hard_C = np.log(linalg.det(Sigma))
+         LL_hard_Q = np.dot(np.dot(y.T,Sigma_inv),y)
+         LL_hard = float(self.N)*2.0*np.log(2.0*np.pi) + LL_hard_C + LL_hard_Q
+         LL_hard = -0.5 * LL_hard
+         return LL_hard
 
       # beta_T_stderr is actually the variance of the estimator
       # It is just hard to change it around all the code right now...
       return LL,beta_T,sigma,beta_T_stderr
-
    def fit_multiple(self,ngrids=10,computeHard=False,type='1111',REML=False):
 
       cors = (np.array(range(ngrids))/float(ngrids)).tolist()
@@ -383,14 +379,14 @@ class mvLMM:
       ecor12 = M.mxCor[1]
 
       for gcor02 in self.gcors:
-	 for ecor02 in self.ecors:
-	   gpoint = np.array([[1.0, gcor01, gcor02],[gcor01,1.0,gcor12],[gcor02,gcor12,1.0]])
-	   epoint = np.array([[1.0, ecor01, ecor02],[ecor01,1.0,ecor12],[ecor02,ecor12,1.0]])
-	   X = self.LL(gpoint,epoint,computeHard=computeHard)[0]
-	   if np.isnan(X): continue
-	   if mx == None or X > mx: 
-	     mx = X
-	     mxCor = ([gcor01,gcor02,gcor12],[ecor01,ecor02,ecor12])
+         for ecor02 in self.ecors:
+           gpoint = np.array([[1.0, gcor01, gcor02],[gcor01,1.0,gcor12],[gcor02,gcor12,1.0]])
+           epoint = np.array([[1.0, ecor01, ecor02],[ecor01,1.0,ecor12],[ecor02,ecor12,1.0]])
+           X = self.LL(gpoint,epoint,computeHard=computeHard)[0]
+           if np.isnan(X): continue
+           if mx == None or X > mx: 
+             mx = X
+             mxCor = ([gcor01,gcor02,gcor12],[ecor01,ecor02,ecor12])
 
       return mx,mxCor
 
@@ -415,7 +411,7 @@ class mvLMM:
       begin = time.time()
 
       if type[0] == '1': 
-	 self.R_pos,self.mx_pos,self.mxCor_pos,self.mxIn_pos = self._fit(gcors,ecors,computeHard=computeHard,REML=REML)
+         self.R_pos,self.mx_pos,self.mxCor_pos,self.mxIn_pos = self._fit(gcors,ecors,computeHard=computeHard,REML=REML)
       else: self.R_pos,self.mx_pos,self.mxCor_pos,self.mxIn_pos = tuple([None for i in range(4)])
 
       if type[1] == '1': self.R_neg,self.mx_neg,self.mxCor_neg,self.mxIn_neg = self._fit(-gcors,-ecors,computeHard=computeHard,REML=REML)
@@ -442,20 +438,20 @@ class mvLMM:
       ecor_matrix = np.ones((self.M,self.M)) * np.nan
 
       for i in range(len(gcors)):
-	 for j in range(len(ecors)): 
-	    gcor_matrix[0,1] = gcor_matrix[1,0] = gcors[i]
-	    ecor_matrix[0,1] = ecor_matrix[1,0] = ecors[j]
-	    R[i,j] = self.LL(gcor_matrix,ecor_matrix,computeHard=computeHard,REML=REML)[0]
+         for j in range(len(ecors)): 
+            gcor_matrix[0,1] = gcor_matrix[1,0] = gcors[i]
+            ecor_matrix[0,1] = ecor_matrix[1,0] = ecors[j]
+            R[i,j] = self.LL(gcor_matrix,ecor_matrix,computeHard=computeHard,REML=REML)[0]
 
-	    #R[i,j] = self.LL(gcors[i],ecors[j],computeHard=computeHard,REML=REML)[0]
-	    if mx == None or R[i,j] > mx: 
-	       #if not mx == None: 
-		  #d = mx - R[i,j]
-		  #D.append((gcors[i],ecors[j],d))
-	       mx = R[i,j]
-	       mxIn = (i,j)
-	       mxCor = (gcors[i],ecors[j])
-	       
+            #R[i,j] = self.LL(gcors[i],ecors[j],computeHard=computeHard,REML=REML)[0]
+            if mx == None or R[i,j] > mx: 
+               #if not mx == None: 
+              #d = mx - R[i,j]
+              #D.append((gcors[i],ecors[j],d))
+               mx = R[i,j]
+               mxIn = (i,j)
+               mxCor = (gcors[i],ecors[j])
+
 
       return R,mx,mxCor,mxIn
       #return R,mx,mxCor,mxIn,D
@@ -489,7 +485,7 @@ class mvLMM:
 
       pl.xlabel("Environmental Correlation")
       pl.ylabel("Genetic Correlation")
-
+    
    def plotFit(self,R = [],norm=True,xticks=[],yticks=[],a=1,b=1):
       import matplotlib.pyplot as pl
       if not len(R): return self.plotPosterior()
@@ -512,60 +508,60 @@ class mvLMM:
       pl.ylabel("Genetic Correlation")
 
    def surfacePlot(self,X,Y,Z,fig=None):
-	 # For the surface plot
-	 import matplotlib.pyplot as pl
-	 from mpl_toolkits.mplot3d import Axes3D
-	 from matplotlib import cm
-	 from matplotlib.ticker import LinearLocator, FormatStrFormatter
+         # For the surface plot
+         import matplotlib.pyplot as pl
+         from mpl_toolkits.mplot3d import Axes3D
+         from matplotlib import cm
+         from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
-	 if not fig: fig = pl.figure()
-	 ax = fig.gca(projection='3d')
-	 X, Y = np.meshgrid(X, Y)
-	 surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.jet, linewidth=0, antialiased=False)
-	 ax.set_zlim(0.00,Z.max())
+         if not fig: fig = pl.figure()
+         ax = fig.gca(projection='3d')
+         X, Y = np.meshgrid(X, Y)
+         surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.jet, linewidth=0, antialiased=False)
+         ax.set_zlim(0.00,Z.max())
 
-	 ax.zaxis.set_major_locator(LinearLocator(10))
-	 ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
+         ax.zaxis.set_major_locator(LinearLocator(10))
+         ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
 
-	 fig.colorbar(surf, shrink=0.5, aspect=5)
+         fig.colorbar(surf, shrink=0.5, aspect=5)
 
-	 pl.xlabel("Environmental Correlation")
-	 pl.ylabel("Genetic Correlation")
-
+         pl.xlabel("Environmental Correlation")
+         pl.ylabel("Genetic Correlation")
+        
    def getMaxWithCourseSearch(self,ngrids=50,courseGrids=10,computeHard=False,REML=False):
-	 """
-	 Finds the ML correlations by first conducting a course grid search over the full space.  Then by finding the quadrant that has the maximum and doing a dense search within there to clarify.
-	 It sets self.mxCor and self.R to the results so that this can be used programatically in association analysis.
-	 """
+         """
+         Finds the ML correlations by first conducting a course grid search over the full space.  Then by finding the quadrant that has the maximum and doing a dense search within there to clarify.
+         It sets self.mxCor and self.R to the results so that this can be used programatically in association analysis.
+         """
 
-	 self.fit(ngrids=courseGrids,computeHard=computeHard,REML=REML)
-	 x = self.R_pos.max()
-	 type = '1000'
-	 y = self.R_neg.max()
-	 if y > x:
-	    x = y
-	    type = '0100'
+         self.fit(ngrids=courseGrids,computeHard=computeHard,REML=REML)
+         x = self.R_pos.max()
+         type = '1000'
+         y = self.R_neg.max()
+         if y > x:
+            x = y
+            type = '0100'
 
-	 z = self.R_posneg.max()
-	 if z > x:
-	    x = z
-	    type = '0010'
+         z = self.R_posneg.max()
+         if z > x:
+            x = z
+            type = '0010'
 
-	 q = self.R_negpos.max()
-	 if q > x:
-	    x = q
-	    type = '0001'
-	 sys.stderr.write("Identified %s type\n" % type)
+         q = self.R_negpos.max()
+         if q > x:
+            x = q
+            type = '0001'
+         sys.stderr.write("Identified %s type\n" % type)
 
-	 self.fit(ngrids=ngrids,type=type,computeHard=computeHard,REML=REML)
-	 if type == '1000':  X,Y,R,mxCor = self.gcors,self.ecors,self.R_pos,self.mxCor_pos
-	 elif type == '0100': X,Y,R,mxCor = -self.gcors,-self.ecors,self.R_neg,self.mxCor_neg
-	 elif type == '0010': X,Y,R,mxCor = self.gcors,-self.ecors,self.R_posneg,self.mxCor_posneg
-	 elif type == '0001': X,Y,R,mxCor = -self.gcors,self.ecors,self.R_negpos,self.mxCor_negpos
+         self.fit(ngrids=ngrids,type=type,computeHard=computeHard,REML=REML)
+         if type == '1000':  X,Y,R,mxCor = self.gcors,self.ecors,self.R_pos,self.mxCor_pos
+         elif type == '0100': X,Y,R,mxCor = -self.gcors,-self.ecors,self.R_neg,self.mxCor_neg
+         elif type == '0010': X,Y,R,mxCor = self.gcors,-self.ecors,self.R_posneg,self.mxCor_posneg
+         elif type == '0001': X,Y,R,mxCor = -self.gcors,self.ecors,self.R_negpos,self.mxCor_negpos
 
-	 self.mxCor = mxCor
-	 self.R = R
-
+         self.mxCor = mxCor
+         self.R = R
+            
    def getMax(self,ngrids=100,REML=False,tripletSearch=True):
       gcors = np.array(range(ngrids))/float(ngrids)
       gcors = gcors[1:-1]
@@ -590,19 +586,19 @@ class mvLMM:
       # The idea here is to look for peaks in two dimensions only if 
       # one of the solutions is on the boundary
       if tripletSearch and (np.abs(mxCor[0]) >= 0.90 or np.abs(mxCor[1]) >= 0.90):
-	 mxTrip = None
-	 if self.verbose: sys.stderr.write("Trying triplets with mxCor=%s...\n" % (str(mxCor)))
-	 for i in range(1,len(self.gcors)-2): 
-	    for j in range(1,len(self.ecors)-2): 
-	       r = R[[i-1,i,i+1],:][:,[j-1,j,j+1]]
-	       if r.max() == R[i,j]: 
-		  if self.verbose: sys.stderr.write("Found Triplet at %0.2f / %0.2f with LL = %0.5f\n" % (self.gcors[i],self.ecors[j],R[i,j]))
-		  if mxTrip == None or mxTrip[2] < R[i,j]:
-		     mxTrip = (self.gcors[i],self.ecors[j],R[i,j])
-	 
-	 if not mxTrip == None:
-	    mxCor = (mxTrip[0],mxTrip[1])
-	    mx = mxTrip[2]
+         mxTrip = None
+         if self.verbose: sys.stderr.write("Trying triplets with mxCor=%s...\n" % (str(mxCor)))
+         for i in range(1,len(self.gcors)-2): 
+            for j in range(1,len(self.ecors)-2): 
+               r = R[[i-1,i,i+1],:][:,[j-1,j,j+1]]
+               if r.max() == R[i,j]: 
+                  if self.verbose: sys.stderr.write("Found Triplet at %0.2f / %0.2f with LL = %0.5f\n" % (self.gcors[i],self.ecors[j],R[i,j]))
+                  if mxTrip == None or mxTrip[2] < R[i,j]:
+                     mxTrip = (self.gcors[i],self.ecors[j],R[i,j])
+
+         if not mxTrip == None:
+            mxCor = (mxTrip[0],mxTrip[1])
+            mx = mxTrip[2]
 
       end = time.time()
 
@@ -616,47 +612,47 @@ class mvLMM:
       return R,mx,mxCor,mxIn
 
    def summaryAnalysis(self,title='',ngrids=50,courseGrids=10,computeHard=False):
-	 import matplotlib.pyplot as pl
-	 fig = pl.figure(figsize=(13,6))
+         import matplotlib.pyplot as pl
+         fig = pl.figure(figsize=(13,6))
 
-	 pl.subplot(121)
-	 self.fit(ngrids=courseGrids,computeHard=computeHard)
-	 self.plotFullGrid()
-	 pl.title(title + ' (Course Grid)')
+         pl.subplot(121)
+         self.fit(ngrids=courseGrids,computeHard=computeHard)
+         self.plotFullGrid()
+         pl.title(title + ' (Course Grid)')
 
-	 x = self.R_pos.max()
-	 type = '1000'
-	 y = self.R_neg.max()
-	 if y > x:
-	    x = y
-	    type = '0100'
+         x = self.R_pos.max()
+         type = '1000'
+         y = self.R_neg.max()
+         if y > x:
+            x = y
+            type = '0100'
 
-	 z = self.R_posneg.max()
-	 if z > x:
-	    x = z
-	    type = '0010'
+         z = self.R_posneg.max()
+         if z > x:
+            x = z
+            type = '0010'
 
-	 q = self.R_negpos.max()
-	 if q > x:
-	    x = q
-	    type = '0001'
+         q = self.R_negpos.max()
+         if q > x:
+            x = q
+            type = '0001'
 
-	 sys.stderr.write("Identified %s type\n" % type)
-	 self.fit(ngrids=ngrids,type=type,computeHard=computeHard)
-	 if type == '1000':  X,Y,R,mxCor = self.gcors,self.ecors,self.R_pos,self.mxCor_pos
-	 elif type == '0100': X,Y,R,mxCor = -self.gcors,-self.ecors,self.R_neg,self.mxCor_neg
-	 elif type == '0010': X,Y,R,mxCor = self.gcors,-self.ecors,self.R_posneg,self.mxCor_posneg
-	 elif type == '0001': X,Y,R,mxCor = -self.gcors,self.ecors,self.R_negpos,self.mxCor_negpos
+         sys.stderr.write("Identified %s type\n" % type)
+         self.fit(ngrids=ngrids,type=type,computeHard=computeHard)
+         if type == '1000':  X,Y,R,mxCor = self.gcors,self.ecors,self.R_pos,self.mxCor_pos
+         elif type == '0100': X,Y,R,mxCor = -self.gcors,-self.ecors,self.R_neg,self.mxCor_neg
+         elif type == '0010': X,Y,R,mxCor = self.gcors,-self.ecors,self.R_posneg,self.mxCor_posneg
+         elif type == '0001': X,Y,R,mxCor = -self.gcors,self.ecors,self.R_negpos,self.mxCor_negpos
 
-	 R = self.normMatrix(R)
+         R = self.normMatrix(R)
 
-	 pl.subplot(122)
-	 self.plotFit(R,norm=False,a = (Y[-1] > 0 and 1 or -1), b=(X[-1] > 0 and 1 or -1))
-	 pl.title(title + " (2D Detailed Fit) \n Max = %0.3f,%0.3f" % mxCor)
+         pl.subplot(122)
+         self.plotFit(R,norm=False,a = (Y[-1] > 0 and 1 or -1), b=(X[-1] > 0 and 1 or -1))
+         pl.title(title + " (2D Detailed Fit) \n Max = %0.3f,%0.3f" % mxCor)
 
-	 self.surfacePlot(Y,X,R)
-	 pl.title(title) #  + " (3D Detailed Fit)")
-
+         self.surfacePlot(Y,X,R)
+         pl.title(title) #  + " (3D Detailed Fit)")
+            
    def association(self,X, gcor=None, ecor=None,REML=False):
       if (not gcor or not ecor) and (not self.mxCor): self.getMaxWithCourseSearch()
       if not gcor: gcor = self.mxCor[0]
@@ -668,21 +664,21 @@ class mvLMM:
       return fs.sum(),ps.sum(),beta[q-1].sum(),betaSTDERR[q-1,q-1]
 
    def fstat(self,beta,stderr,sigma,q): 
-	 # Assumes that the tested effect is in the q-1 position for 
-	 # column in beta.
-	 # This is what happens if a SNP vector is passed to .association.
-	 p = self.M
-	 R = [[0.0]*(p*q) for i in range(p)]
-	 for i in range(p): R[i][i*q+(q-1)] = 1.0
-	 R = np.array(R)
+         # Assumes that the tested effect is in the q-1 position for 
+         # column in beta.
+         # This is what happens if a SNP vector is passed to .association.
+         p = self.M
+         R = [[0.0]*(p*q) for i in range(p)]
+         for i in range(p): R[i][i*q+(q-1)] = 1.0
+         R = np.array(R)
 
-	 Rb = np.dot(R,beta)
-	 V = np.dot(np.dot(R,stderr),R.T)
-	 Vi = linalg.inv(V)
-	 fs = 1.0/(sigma*p) * np.dot(np.dot(Rb.T,Vi),Rb)
-	 ps = 1.0 - stats.f.cdf(fs,p,(self.N*self.M) - (self.M*q))
+         Rb = np.dot(R,beta)
+         V = np.dot(np.dot(R,stderr),R.T)
+         Vi = linalg.inv(V)
+         fs = 1.0/(sigma*p) * np.dot(np.dot(Rb.T,Vi),Rb)
+         ps = 1.0 - stats.f.cdf(fs,p,(self.N*self.M) - (self.M*q))
 
-	 return fs,ps
+         return fs,ps
    
    def stat(self): pass
 
@@ -691,7 +687,7 @@ class mvLMM:
        #fs = Pt %*% solve((R %*% betaHat$stderrSQ %*% Rt)*sigmaHat) %*% P  # again need to consider residual error of Y after transformation
        #fs = fs / p
        #ps = pf(fs, p, N-p*(q+1), lower.tail=F)
-	 
+         
    def getMeanAndVariance(self,R):
       Rn = self.normMatrix(R)
       Ex = (self.gcors * Rn.sum(1)).sum() 
@@ -699,18 +695,3 @@ class mvLMM:
       return Ex,X_Ex
      
        
-      
-
-      
-
-	 
-      
-
-      
-   
-      
-      
-      
-
-
-
